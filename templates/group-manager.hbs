@@ -1,0 +1,52 @@
+<div class="group-manager-content">
+    <div class="existing-conversations">
+        <h4>Existing Conversations</h4>
+        <div class="conversation-list">
+            {{#each conversations}}
+            <label class="item-label">
+                <input type="radio" name="selectedConversation"
+                       data-conversation-id="{{this.id}}" data-type="{{this.type}}">
+                <i class="fas {{this.icon}}"></i>
+                <span>{{this.name}} ({{this.history.length}} msgs)</span>
+            </label>
+            {{else}}
+            <p class="notes">No conversations found.</p>
+            {{/each}}
+        </div>
+        <div class="actions">
+            <button type="button" data-action="openSelected" title="View Log">
+                <i class="fas fa-folder-open"></i> View
+            </button>
+            <button type="button" data-action="exportSelected" title="Export Log">
+                <i class="fas fa-file-export"></i> Export
+            </button>
+            <button type="button" data-action="deleteSelected" title="Delete Log">
+                <i class="fas fa-trash"></i> Delete
+            </button>
+        </div>
+    </div>
+
+    <div class="create-new-group">
+        <h4>Create New Group</h4>
+        <div class="form-group">
+            <label>Group Name</label>
+            <input type="text" name="newGroupName" placeholder="Name for new group...">
+        </div>
+        <label>Select Members</label>
+        <div class="user-list">
+            {{#each users}}
+            <label class="item-label">
+                <input type="checkbox" class="user-checkbox" value="{{this.id}}">
+                <span>{{this.name}}</span>
+            </label>
+            {{else}}
+            <p class="notes">No other players available.</p>
+            {{/each}}
+        </div>
+        <div class="actions">
+            <button type="button" data-action="createGroup">
+                <i class="fas fa-plus"></i> Create Group
+            </button>
+        </div>
+    </div>
+</div>
