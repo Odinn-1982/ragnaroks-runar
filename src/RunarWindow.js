@@ -65,7 +65,6 @@ export class RunarWindow extends HandlebarsApplicationMixin(ApplicationV2) {
 
     _onRender(context, options) {
         super._onRender(context, options);
-        // Call the scroll helper on the initial render.
         this.#scrollToBottom();
 
         this.element.addEventListener('submit', event => {
@@ -75,18 +74,12 @@ export class RunarWindow extends HandlebarsApplicationMixin(ApplicationV2) {
         });
     }
 
-    /**
-     * @override
-     * By overriding render(), we can execute code after every single update.
-     */
     async render(force, options) {
         await super.render(force, options);
-        // Call the scroll helper every time new content is rendered.
         this.#scrollToBottom();
         return this;
     }
 
-    /** A dedicated helper method to scroll the message list to the bottom. */
     #scrollToBottom() {
         const messageList = this.element.querySelector('.message-list');
         if (messageList) {
@@ -133,7 +126,8 @@ export class RunarWindow extends HandlebarsApplicationMixin(ApplicationV2) {
             } else if (game.user.isGM) {
                 await DataManager.savePrivateChats();
             }
-            UIManager.updateChatWindow(recipientId, 'private');
+            // FIX: Replaced UIManager call with a direct render for more stability.
+            this.render(true);
         } 
         else if (this.options.groupId) {
             const groupId = this.options.groupId;
@@ -145,7 +139,8 @@ export class RunarWindow extends HandlebarsApplicationMixin(ApplicationV2) {
             if (recipients.length > 0) {
                 SocketHandler.emit("groupMessage", { groupId, message: messageData }, { recipients });
             }
-            UIManager.updateChatWindow(groupId, 'group');
+             // FIX: Replaced UIManager call with a direct render for more stability.
+            this.render(true);
             if (game.user.isGM) await DataManager.saveGroupChats();
         }
 

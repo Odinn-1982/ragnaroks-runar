@@ -3,7 +3,7 @@ import { DataManager } from './DataManager.js';
 export class UIManager {
     static openPrivateChatWindows = new Map();
     static openGroupChatWindows = new Map();
-    static gmMonitorWindow = null; // <-- ADDED THIS PROPERTY
+    static gmMonitorWindow = null;
 
     static async openPlayerHub() {
         const { PlayerHubWindow } = await import('./PlayerHubWindow.js');
@@ -19,6 +19,8 @@ export class UIManager {
         const chatKey = DataManager.getPrivateChatKey(game.user.id, userId);
         if (!DataManager.privateChats.has(chatKey)) {
             DataManager.addPrivateMessage(game.user.id, userId, {});
+            // FIX: This is the critical line that saves the new chat, fixing the bug.
+            if (game.user.isGM) await DataManager.savePrivateChats();
         }
 
         const { RunarWindow } = await import('./RunarWindow.js');
@@ -49,14 +51,12 @@ export class UIManager {
     static async openGMMonitor() {
         if (!game.user.isGM) return ui.notifications.warn("You do not have permission.");
         
-        // If the window already exists and is open, just bring it to the front.
         if (this.gmMonitorWindow?.rendered) {
             return this.gmMonitorWindow.bringToTop();
         }
 
         const { GMMonitorWindow } = await import('./GMMonitorWindow.js');
         
-        // Create the new window and store its instance in our static property.
         this.gmMonitorWindow = new GMMonitorWindow();
         return this.gmMonitorWindow.render(true);
     }
@@ -86,9 +86,7 @@ export class UIManager {
     }
 
     static updateGMMonitor() {
-        // Now, we check our stored reference directly. Much more reliable!
         if (this.gmMonitorWindow?.rendered) {
-            console.log("RÚNAR | Forcing GM Monitor update via direct reference.");
             this.gmMonitorWindow.render(true);
         }
     }

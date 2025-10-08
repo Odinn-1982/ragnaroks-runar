@@ -37,12 +37,19 @@ export class DataManager {
             this.privateChats.get(chatKey).history.push(messageData);
         }
     }
+
+    // FIX: Added the missing function back into the file.
+    static addGroupMessage(groupId, messageData) {
+        const group = this.groupChats.get(groupId);
+        if (group) {
+            if (!group.messages) group.messages = [];
+            group.messages.push(messageData);
+        }
+    }
     
     static addInterceptedMessage(payload) {
         payload.id = foundry.utils.randomID();
         this.interceptedMessages.push(payload);
         if (this.interceptedMessages.length > 50) this.interceptedMessages.shift();
     }
-    
-    // Other functions like addGroupMessage can remain.
 }
