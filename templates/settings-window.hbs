@@ -1,0 +1,23 @@
+<div class="form-content">
+    <p class="notes">Select a sound for your personal chat notifications. This is only audible to you.</p>
+
+    <div class="form-group">
+        <label>Notification Sound</label>
+        <div class="form-fields">
+            <select name="notificationSound">
+                {{#each sounds}}
+                <option value="{{this.path}}" {{#if (eq this.path ../currentSound)}}selected{{/if}}>{{this.name}}</option>
+                {{/each}}
+            </select>
+            <button type="button" class="flex0" data-action="preview-sound" title="Preview Sound">
+                <i class="fas fa-volume-up"></i>
+            </button>
+        </div>
+    </div>
+
+    <footer class="form-footer">
+        <button type="submit" name="submit">
+            <i class="far fa-save"></i> Save Changes
+        </button>
+    </footer>
+</div>

@@ -1,0 +1,96 @@
+/* --- Global Foundry VTT Theme --- */
+
+/* 1. DEFINE THE THEME COLORS */
+:root {
+  --runar-primary-color: #1C1C1C;      /* Darkest charcoal for headers */
+  --runar-secondary-color: #36454F;   /* Lighter charcoal for content backgrounds */
+  --runar-gold-color: #DAA520;        /* Gold for text, borders, and highlights */
+  --runar-text-color: #E0E0E0;        /* Off-white for general text */
+  --runar-input-bg: #4F4F4F;          /* Dark grey for input fields */
+  --runar-button-stone-bg: #696969;   /* Stone grey for buttons */
+}
+
+/* 2. APPLY THEME TO CORE FOUNDRY UI */
+
+/* Windows and Dialogs */
+.window-app, .dialog {
+  background: var(--runar-secondary-color) !important;
+  border-radius: 8px !important;
+  box-shadow: 2px 2px 12px rgba(0,0,0,0.5) !important;
+  border: 2px solid var(--runar-primary-color) !important;
+}
+
+.window-header, .dialog .dialog-title {
+  background: var(--runar-primary-color) !important;
+  border-bottom: 2px solid var(--runar-gold-color) !important;
+  text-shadow: 1px 1px 2px #000 !important;
+}
+
+/* FIX: More specific selector to force header text to be gold */
+.app.window-app .window-header h4,
+.dialog .dialog-title {
+  color: var(--runar-gold-color) !important;
+  font-weight: bold !important;
+}
+
+.window-content, .dialog .dialog-content {
+  background: var(--runar-secondary-color) !important;
+  color: var(--runar-text-color) !important;
+  overflow-y: auto;
+}
+
+/* Buttons */
+button, .button, .dialog .dialog-buttons button {
+  background: var(--runar-button-stone-bg) !important;
+  color: var(--runar-gold-color) !important;
+  border: 3px outset #4a4a4a !important;
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.8), inset 0 0 2px rgba(255,255,255,0.2) !important;
+  font-weight: bold !important;
+  text-shadow: 1px 1px 2px #000 !important;
+  transition: all 0.15s ease !important;
+}
+
+button:hover, .button:hover, .dialog .dialog-buttons button:hover {
+  background: #7a7a7a !important;
+  box-shadow: 0 0 10px var(--runar-gold-color) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Text Inputs and Forms */
+input[type="text"], textarea, select {
+  background: var(--runar-input-bg) !important;
+  color: var(--runar-text-color) !important;
+  border: 1px solid var(--runar-primary-color) !important;
+}
+
+.form-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.form-group label {
+    flex: 0 0 120px;
+    text-align: right;
+    color: var(--runar-gold-color) !important;
+    font-weight: bold !important;
+    text-shadow: 0 0 2px #000 !important;
+}
+
+.form-group .form-fields {
+    flex: 1;
+    display: flex;
+    gap: 5px;
+}
+
+.form-group .form-fields input,
+.form-group .form-fields select,
+.form-group .form-fields button {
+    flex: 1;
+}
+
+.window-content h1, .window-content h2, .window-content h3, .window-content h4, .window-content h5, .window-content legend {
+  border-bottom: none;
+}
