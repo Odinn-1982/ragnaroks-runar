@@ -1,6 +1,5 @@
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 import { RagnaroksRunar } from './RagnaroksRunar.js';
-import { slugify } from 'foundry.utils.string'; // <--- V13 FIX: Import the utility
 
 export class SettingsWindow extends HandlebarsApplicationMixin(ApplicationV2) {
 
@@ -10,7 +9,7 @@ export class SettingsWindow extends HandlebarsApplicationMixin(ApplicationV2) {
         window: { title: "RNR.SettingsTitle", resizable: false, width: 400, height: "auto" },
         tag: 'form',
         form: {
-            handler: SettingsWindow.#onFormSubmit, // Corrected reference
+            handler: SettingsWindow.#onFormSubmit,
             closeOnSubmit: true
         }
     };
@@ -35,9 +34,12 @@ export class SettingsWindow extends HandlebarsApplicationMixin(ApplicationV2) {
             for (const filePath of browseResult.files) {
                 const fileName = filePath.split('/').pop();
                 let soundName = fileName.substring(0, fileName.lastIndexOf('.'));
-
-                // V13 FIX: Use the imported slugify utility function
-                sounds.push({ path: filePath, name: slugify(soundName) }); 
+                
+                // V13 DEFINITIVE FIX: Use pure JavaScript string manipulation to guarantee compatibility.
+                let cleanName = soundName.replace(/[-_]/g, ' ');
+                cleanName = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
+                
+                sounds.push({ path: filePath, name: cleanName }); 
             }
         } catch (error) {
             console.error(`${RagnaroksRunar.NAME} | Could not browse for sounds in ${targetPath}.`, error);
