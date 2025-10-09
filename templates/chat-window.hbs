@@ -24,9 +24,13 @@
             </select>
         </div>
         {{/if}}
-        <textarea name="message" rows="3" placeholder="Type your message..."></textarea>
-        <button type="submit" title="Send Message">
-            <i class="fas fa-paper-plane"></i>
-        </button>
+
+        {{!-- FIX: Wrap the textarea and button in a div to stabilize the layout --}}
+        <div class="message-input-wrapper">
+            <textarea name="message" rows="3" placeholder="Type your message..."></textarea>
+            <button type="submit" title="Send Message">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
     </div>
 </div>
