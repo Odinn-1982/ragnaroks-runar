@@ -4,12 +4,15 @@ export class UIManager {
     static openPrivateChatWindows = new Map();
     static openGroupChatWindows = new Map();
     static gmMonitorWindow = null;
+    static groupManagerWindow = null;
+    static playerHubWindow = null; // FIX: Add a static property for the player hub
 
     static async openPlayerHub() {
+        // FIX: Use and manage the static property for the player hub.
+        if (this.playerHubWindow?.rendered) return this.playerHubWindow.bringToTop();
         const { PlayerHubWindow } = await import('./PlayerHubWindow.js');
-        const id = 'runar-player-hub';
-        if (Object.values(ui.windows).find(w => w.id === id)) return;
-        new PlayerHubWindow().render(true);
+        this.playerHubWindow = new PlayerHubWindow();
+        return this.playerHubWindow.render(true);
     }
 
     static async openChatFor(userId) {
@@ -19,8 +22,6 @@ export class UIManager {
         const chatKey = DataManager.getPrivateChatKey(game.user.id, userId);
         if (!DataManager.privateChats.has(chatKey)) {
             DataManager.addPrivateMessage(game.user.id, userId, {});
-            // FIX: This is the critical line that saves the new chat, fixing the bug.
-            if (game.user.isGM) await DataManager.savePrivateChats();
         }
 
         const { RunarWindow } = await import('./RunarWindow.js');
@@ -42,21 +43,18 @@ export class UIManager {
 
     static async openGroupManager() {
         if (!game.user.isGM) return ui.notifications.error("This is a GM-only tool.");
+        if (this.groupManagerWindow?.rendered) return this.groupManagerWindow.bringToTop();
+
         const { GroupManagerWindow } = await import('./GroupManagerWindow.js');
-        const id = 'runar-group-manager';
-        if (Object.values(ui.windows).find(w => w.id === id)) return;
-        new GroupManagerWindow().render(true);
+        this.groupManagerWindow = new GroupManagerWindow();
+        return this.groupManagerWindow.render(true);
     }
 
     static async openGMMonitor() {
         if (!game.user.isGM) return ui.notifications.warn("You do not have permission.");
-        
-        if (this.gmMonitorWindow?.rendered) {
-            return this.gmMonitorWindow.bringToTop();
-        }
+        if (this.gmMonitorWindow?.rendered) return this.gmMonitorWindow.bringToTop();
 
         const { GMMonitorWindow } = await import('./GMMonitorWindow.js');
-        
         this.gmMonitorWindow = new GMMonitorWindow();
         return this.gmMonitorWindow.render(true);
     }
@@ -81,8 +79,16 @@ export class UIManager {
     }
     
     static updateGroupManager() {
-        const groupManager = Object.values(ui.windows).find(w => w.id === 'runar-group-manager');
-        if (groupManager) groupManager.render(true);
+        if (this.groupManagerWindow?.rendered) {
+            this.groupManagerWindow.render(true);
+        }
+    }
+
+    // FIX: Add the update function for the player hub.
+    static updatePlayerHub() {
+        if (this.playerHubWindow?.rendered) {
+            this.playerHubWindow.render(true);
+        }
     }
 
     static updateGMMonitor() {

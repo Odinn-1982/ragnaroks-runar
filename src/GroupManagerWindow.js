@@ -1,6 +1,7 @@
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 import { DataManager } from './DataManager.js';
 import { UIManager } from './UIManager.js';
+import { SocketHandler } from './SocketHandler.js';
 
 export class GroupManagerWindow extends HandlebarsApplicationMixin(ApplicationV2) {
   
@@ -24,7 +25,6 @@ export class GroupManagerWindow extends HandlebarsApplicationMixin(ApplicationV2
         const conversations = [];
         const currentUser = game.user;
 
-        // Process Group Chats
         for (const group of DataManager.groupChats.values()) {
             conversations.push({
                 id: group.id,
@@ -36,14 +36,11 @@ export class GroupManagerWindow extends HandlebarsApplicationMixin(ApplicationV2
             });
         }
 
-        // Process Private Chats
         for (const [key, chat] of DataManager.privateChats.entries()) {
             if (!chat.users || chat.users.length < 2 || (chat.history?.length ?? 0) === 0) continue;
-
             const user1 = game.users.get(chat.users[0]);
             const user2 = game.users.get(chat.users[1]);
             if (!user1 || !user2) continue;
-            
             conversations.push({
                 id: key,
                 name: `${user1.name} & ${user2.name}`,
@@ -53,19 +50,10 @@ export class GroupManagerWindow extends HandlebarsApplicationMixin(ApplicationV2
                 history: chat.history || []
             });
         }
-
         conversations.sort((a, b) => a.name.localeCompare(b.name));
-
-        const filteredUsers = game.users.filter(u => u.active && !u.isGM);
-
         return {
             conversations: conversations,
-            // FIX: Changed variable name from 'allUsers' to 'users' to match the template.
-            users: filteredUsers.map(u => ({
-                id: u.id,
-                name: u.name,
-                isGM: u.isGM
-            })),
+            users: game.users.filter(u => u.active && u.id !== currentUser.id),
             isGM: currentUser.isGM
         };
     }
@@ -93,37 +81,46 @@ export class GroupManagerWindow extends HandlebarsApplicationMixin(ApplicationV2
 
         if (selected.type === 'group') {
             UIManager.openGroupChat(selected.conversationId);
-        } 
-        else if (selected.type === 'private') {
-            const userIds = selected.conversationId.split('-');
-            const otherUserId = userIds.find(id => id !== game.user.id);
-
-            if (otherUserId) {
-                UIManager.openChatFor(otherUserId);
-            } else {
-                ui.notifications.error("Could not find the other user for this private chat.");
-            }
+        } else {
+            const chat = DataManager.privateChats.get(selected.conversationId);
+            if (!chat) return ui.notifications.error("Could not find the selected private chat log.");
+            const chatHistory = chat.history || [];
+            const user1 = game.users.get(chat.users[0]);
+            const user2 = game.users.get(chat.users[1]);
+            const title = `Log: ${user1?.name || 'Unknown'} & ${user2?.name || 'Unknown'}`;
+            const content = chatHistory.map(msg => {
+                const time = new Date(msg.timestamp).toLocaleTimeString();
+                return `<div><strong>[${time}] ${msg.senderName}:</strong> ${msg.messageContent}</div>`;
+            }).join('');
+            Dialog.prompt({
+                title: title,
+                content: `<div class="dialog-scrollable-log">${content || "No messages in this log."}</div>`,
+                label: "Close",
+                callback: () => {}
+            });
         }
-        this.close();
     }
     
     async exportSelected() {
         const selected = this._getSelected();
         if (!selected) return;
+
         let chatHistory, fileName;
         if (selected.type === 'group') {
             const group = DataManager.groupChats.get(selected.conversationId);
-            chatHistory = group.messages;
+            chatHistory = group ? group.messages : [];
             fileName = `runar-log-group-${group.name.slugify()}.txt`;
         } else {
             const chat = DataManager.privateChats.get(selected.conversationId);
-            chatHistory = chat.history;
+            chatHistory = chat ? chat.history : [];
             fileName = `runar-log-private-${selected.conversationId}.txt`;
         }
+
         const formattedLog = chatHistory.map(msg => {
             const time = new Date(msg.timestamp).toLocaleString();
             return `[${time}] ${msg.senderName}: ${msg.messageContent}`;
         }).join('\r\n');
+
         saveDataToFile(formattedLog, "text/plain", fileName);
         ui.notifications.info("Chat log exported.");
     }
@@ -131,6 +128,7 @@ export class GroupManagerWindow extends HandlebarsApplicationMixin(ApplicationV2
     async deleteSelected() {
         const selected = this._getSelected();
         if (!selected) return;
+
         Dialog.confirm({
             title: "Delete Conversation Log",
             content: "<p>Are you sure you want to permanently delete this chat log? This cannot be undone.</p>",
@@ -153,15 +151,31 @@ export class GroupManagerWindow extends HandlebarsApplicationMixin(ApplicationV2
     async createGroup() {
         const form = this.element;
         const name = form.querySelector('input[name="newGroupName"]')?.value;
-        if (!name) return ui.notifications.warn("Please enter a group name.");
+        if (!name?.trim()) return ui.notifications.warn("Please enter a group name.");
+        
         const selectedUsers = Array.from(form.querySelectorAll('.user-checkbox:checked')).map(el => el.value);
         if (selectedUsers.length === 0) return ui.notifications.warn("Please select at least one member.");
+        
         const allMemberIds = [...new Set([game.user.id, ...selectedUsers])];
         const newGroupId = foundry.utils.randomID();
-        const newGroup = { id: newGroupId, name: name, members: allMemberIds, messages: [] };
+        const newGroup = { id: newGroupId, name: name.trim(), members: allMemberIds, messages: [] };
+
         DataManager.groupChats.set(newGroupId, newGroup);
         await DataManager.saveGroupChats();
+        
+        // FIX: Notify other members that the group has been created.
+        const recipients = allMemberIds.filter(id => id !== game.user.id);
+        if (recipients.length > 0) {
+            SocketHandler.emit("groupCreate", { group: newGroup }, { recipients });
+        }
+        
         ui.notifications.info(`Group "${name}" created.`);
         this.render(true);
+        UIManager.openGroupChat(newGroupId);
+    }
+
+    async close(options) {
+        UIManager.groupManagerWindow = null;
+        return super.close(options);
     }
 }

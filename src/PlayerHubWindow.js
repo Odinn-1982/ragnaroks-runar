@@ -10,7 +10,7 @@ export class PlayerHubWindow extends HandlebarsApplicationMixin(ApplicationV2) {
     classes: ['ragnaroks-runar', 'player-hub-app'],
     window: { title: "RNR.PlayerHubTitle", resizable: true },
     tag: 'form',
-    position: { width: 600, height: 450 } // FIX: Changed height from "auto" to a fixed value
+    position: { width: 600, height: 450 }
   };
 
   get title() {
@@ -107,5 +107,11 @@ export class PlayerHubWindow extends HandlebarsApplicationMixin(ApplicationV2) {
     UIManager.openGroupChat(newGroupId);
     
     this.close();
+  }
+
+  // FIX: Add this method to clean up the window reference on close.
+  async close(options) {
+      UIManager.playerHubWindow = null;
+      return super.close(options);
   }
 }
