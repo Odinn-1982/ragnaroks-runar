@@ -2,7 +2,7 @@
   "id": "ragnaroks-runar",
   "title": "RagNarok's Rúnar",
   "description": "A system-agnostic Foundry VTT module for dynamic group and private chats, persistent logs, customizable sound notifications, multi-language support, and modern UX. Includes GM chat monitoring, macros, and customizable styles for immersive gameplay.",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "authors": [
     {
       "name": "Odinn",
@@ -16,17 +16,17 @@
     "verified": "13"
   },
   "esmodules": [
-    "./src/RagnaroksRunar.js",
-    "./src/DataManager.js",
-    "./src/UIManager.js",
-    "./src/SocketHandler.js",
-    "./src/hooks.js",
-    "./src/RunarWindow.js",
-    "./src/GroupManagerWindow.js",
-    "./src/GMMonitorWindow.js",
-    "./src/SettingsWindow.js",
-    "./src/PlayerHubWindow.js"
-  ],
+  "./src/RagnaroksRunar.js",
+  "./src/DataManager.js",
+  "./src/UIManager.js",
+  "./src/SocketHandler.js",
+  "./src/hooks.js",
+  "./src/RunarWindow.v2.js",
+  "./src/GroupManagerWindow.js",
+  "./src/GMMonitorWindow.js",
+  "./src/SettingsWindow.js",
+  "./src/PlayerHubWindow.js"
+  ]
   "styles": [
     "global-theme.css",
     "ragnaroks-runar.css"
@@ -48,7 +48,3 @@
   "download": "https://github.com/Odinn-1982/ragnaroks-runar/archive/refs/heads/main.zip",
   "url": "https://github.com/Odinn-1982/ragnaroks-runar"
 }
-
-
-
-
