@@ -29,10 +29,8 @@ export class RunarWindow extends HandlebarsApplicationMixin(ApplicationV2) {
         window: { title: "RNR.AppName", resizable: true },
         position: { width: 400, height: 600 },
         tag: 'form',
-        form: { 
-            handler: RunarWindow.#onFormSubmit, 
-            closeOnSubmit: false 
-        } 
+        // FIX 1: Remove the form handler to prevent the ApplicationV2 shim from crashing
+        // form: { handler: RunarWindow.#onFormSubmit, closeOnSubmit: false } 
     };
 
     static PARTS = {
@@ -53,12 +51,10 @@ export class RunarWindow extends HandlebarsApplicationMixin(ApplicationV2) {
             messages = group?.messages || [];
         }
         
-        // The speaker list includes all active users for GMs to choose from.
         const speakers = game.users
             .filter(u => u.active && (u.isGM || game.user.id === u.id))
             .map(u => ({ id: u.id, name: u.name }));
             
-        // Add current user to context for template checks
         context.currentUser = game.user;
         context.messages = messages;
         context.isGM = isGM;
@@ -69,6 +65,10 @@ export class RunarWindow extends HandlebarsApplicationMixin(ApplicationV2) {
 
     _onRender(context, options) {
         super._onRender(context, options);
+        
+        // FIX 2: Manually attach the event listener since the ApplicationV2 handler failed
+        this.element[0]?.addEventListener('submit', this.#onFormSubmitManual.bind(this));
+
         // Scroll to the bottom of the message list on render
         const messageList = this.element.find('.message-list')[0];
         if (messageList) {
@@ -76,6 +76,21 @@ export class RunarWindow extends HandlebarsApplicationMixin(ApplicationV2) {
         }
         // Focus the input field
         this.element.find('textarea[name="message"]').focus();
+    }
+
+    // FIX 3: New submission handler to collect data manually
+    async #onFormSubmitManual(event) {
+        event.preventDefault();
+        
+        const form = event.currentTarget;
+        const formElement = form.querySelector('form') || form;
+        
+        // Use the native FormData object and convert to a plain object
+        const formData = new FormData(formElement);
+        const data = Object.fromEntries(formData.entries()); 
+        
+        // Now call the original static method with the manually collected data
+        return RunarWindow.#onFormSubmit(event, form, data, this);
     }
     
     async close(options) {
@@ -89,16 +104,9 @@ export class RunarWindow extends HandlebarsApplicationMixin(ApplicationV2) {
     
     /**
      * Handles the form submission for sending a message.
-     * @param {Event} event 
-     * @param {HTMLFormElement} form 
-     * @param {object} formData - The parsed form data object from ApplicationV2
+     * NOTE: 'data' is the collected form data object
      */
-    static async #onFormSubmit(event, form, formData) {
-        event.preventDefault();
-
-        // FIX 1 (Line 72): Resolves the 'FormDataExtended' TypeError.
-        // Use the formData.object property directly from the ApplicationV2 handler.
-        const data = formData.object; 
+    static async #onFormSubmit(event, form, data, windowInstance) {
         
         const message = data.message?.trim();
         if (!message) return;
@@ -123,8 +131,7 @@ export class RunarWindow extends HandlebarsApplicationMixin(ApplicationV2) {
             timestamp: Date.now() 
         };
 
-        // Get a reference to the window instance to call render(true)
-        const windowInstance = Object.values(ui.windows).find(w => w.element?.is(form.closest('.window-app')));
+        // windowInstance is passed from the manual handler, simplifying window access
         if (!windowInstance) return;
 
 
@@ -134,13 +141,11 @@ export class RunarWindow extends HandlebarsApplicationMixin(ApplicationV2) {
             
             DataManager.addPrivateMessage(senderId, recipientId, messageData);
             
-            // FIX 2: Emit to BOTH the sender and the recipient for reliable UI update via socket (critical for GMs).
             SocketHandler.emit("privateMessage", { recipientId, message: messageData }, { recipients: [senderId, recipientId] }); 
             
             const recipientUser = game.users.get(recipientId);
             
             if (game.user.isGM) {
-                // If sender is GM, save for persistence
                 await DataManager.savePrivateChats();
                 
             } else if (recipientUser && !recipientUser.isGM) {
@@ -164,7 +169,6 @@ export class RunarWindow extends HandlebarsApplicationMixin(ApplicationV2) {
 
             DataManager.addGroupMessage(groupId, messageData);
             
-            // FIX 3: Emit to ALL group members to ensure everyone, including sender, receives update.
             if (group.members.length > 0) {
                 SocketHandler.emit("groupMessage", { groupId, message: messageData }, { recipients: group.members }); 
             }
