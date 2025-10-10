@@ -25,98 +25,126 @@ export class RunarWindow extends HandlebarsApplicationMixin(ApplicationV2) {
     }
 
     static DEFAULT_OPTIONS = {
-        classes: ['ragnaroks-runar', 'ragnaroks-runar-chat-window'],
-        position: { width: 400, height: 450 },
-        window: { resizable: true },
+        classes: ['ragnaroks-runar', 'chat-app'],
+        window: { title: "RNR.AppName", resizable: true },
+        position: { width: 400, height: 600 },
         tag: 'form',
-        form: { closeOnSubmit: false }
+        form: { 
+            handler: RunarWindow.#onFormSubmit, 
+            closeOnSubmit: false 
+        } 
     };
 
     static PARTS = {
-        form: { template: `modules/ragnaroks-runar/templates/chat-window.hbs` }
+        form: { template: 'modules/ragnaroks-runar/templates/chat-window.hbs' }
     };
 
     async _prepareContext(options) {
-        const context = { currentUser: game.user, isGM: game.user.isGM };
-        if (context.isGM) {
-            context.speakers = [
-                { id: game.user.id, name: game.user.name, isActor: false },
-                ...game.actors.filter(a => a.isOwner).map(a => ({ id: a.id, name: a.name, isActor: true }))
-            ];
-        }
+        const context = super._prepareContext(options);
+        const isGM = game.user.isGM;
+        let messages = [];
+
         if (this.options.otherUserId) {
             const chatKey = DataManager.getPrivateChatKey(game.user.id, this.options.otherUserId);
             const chat = DataManager.privateChats.get(chatKey);
-            Object.assign(context, {
-                isGroup: false,
-                otherUser: game.users.get(this.options.otherUserId),
-                messages: chat ? chat.history : []
-            });
+            messages = chat?.history || [];
         } else if (this.options.groupId) {
             const group = DataManager.groupChats.get(this.options.groupId);
-            Object.assign(context, {
-                isGroup: true,
-                group: group,
-                messages: group ? group.messages : []
-            });
+            messages = group?.messages || [];
         }
+        
+        // The speaker list includes all active users for GMs to choose from.
+        const speakers = game.users
+            .filter(u => u.active && (u.isGM || game.user.id === u.id))
+            .map(u => ({ id: u.id, name: u.name }));
+            
+        // Add current user to context for template checks
+        context.currentUser = game.user;
+        context.messages = messages;
+        context.isGM = isGM;
+        context.speakers = speakers;
+
         return context;
     }
 
     _onRender(context, options) {
         super._onRender(context, options);
-        this.#scrollToBottom();
-
-        this.element.addEventListener('submit', event => {
-            event.preventDefault();
-            // This is the corrected line:
-            const formData = new foundry.data.FormDataExtended(this.element);
-            this._onSubmit(event, this.element, formData.object);
-        });
-    }
-
-    async render(force, options) {
-        await super.render(force, options);
-        this.#scrollToBottom();
-        return this;
-    }
-
-    #scrollToBottom() {
-        const messageList = this.element.querySelector('.message-list');
+        // Scroll to the bottom of the message list on render
+        const messageList = this.element.find('.message-list')[0];
         if (messageList) {
             messageList.scrollTop = messageList.scrollHeight;
         }
+        // Focus the input field
+        this.element.find('textarea[name="message"]').focus();
     }
-  
-    async _onSubmit(event, form, formData) {
-        const message = formData.message;
-        if (!message?.trim()) return;
-
-        let speakerData = null;
-        if (game.user.isGM) {
-            const speakerId = formData.speaker;
-            if (speakerId !== game.user.id) {
-                const actor = game.actors.get(speakerId);
-                if (actor) speakerData = { name: actor.name, img: actor.img };
-            }
+    
+    async close(options) {
+        if (this.options.otherUserId) {
+            UIManager.openPrivateChatWindows.delete(this.options.otherUserId);
+        } else if (this.options.groupId) {
+            UIManager.openGroupChatWindows.delete(this.options.groupId);
         }
+        return super.close(options);
+    }
+    
+    /**
+     * Handles the form submission for sending a message.
+     * @param {Event} event 
+     * @param {HTMLFormElement} form 
+     * @param {object} formData - The parsed form data object from ApplicationV2
+     */
+    static async #onFormSubmit(event, form, formData) {
+        event.preventDefault();
+
+        // FIX 1 (Line 72): Resolves the 'FormDataExtended' TypeError.
+        // Use the formData.object property directly from the ApplicationV2 handler.
+        const data = formData.object; 
         
+        const message = data.message?.trim();
+        if (!message) return;
+
         const senderId = game.user.id;
+
+        // 2. Determine the Speaker (Crucial for GM)
+        let speakerId = senderId;
+        const speakerSelect = form.querySelector('select[name="speaker"]');
+        if (game.user.isGM && speakerSelect) {
+            speakerId = speakerSelect.value;
+        }
+
+        const speakerUser = game.users.get(speakerId) ?? game.user; 
+        
         const messageData = { 
             senderId: senderId, 
-            senderName: speakerData ? speakerData.name : (game.user.name),
-            senderImg: speakerData ? speakerData.img : game.user.avatar,
+            speakerId: speakerId, 
+            senderName: speakerUser.name,
+            senderImg: speakerUser.avatar,
             messageContent: message, 
             timestamp: Date.now() 
         };
 
-        if (this.options.otherUserId) {
-            const recipientId = this.options.otherUserId;
-            DataManager.addPrivateMessage(senderId, recipientId, messageData);
-            SocketHandler.emit("privateMessage", { recipientId, message: messageData }, { recipients: [recipientId] });
+        // Get a reference to the window instance to call render(true)
+        const windowInstance = Object.values(ui.windows).find(w => w.element?.is(form.closest('.window-app')));
+        if (!windowInstance) return;
 
+
+        // --- Private Chat Logic ---
+        if (windowInstance.options.otherUserId) {
+            const recipientId = windowInstance.options.otherUserId;
+            
+            DataManager.addPrivateMessage(senderId, recipientId, messageData);
+            
+            // FIX 2: Emit to BOTH the sender and the recipient for reliable UI update via socket (critical for GMs).
+            SocketHandler.emit("privateMessage", { recipientId, message: messageData }, { recipients: [senderId, recipientId] }); 
+            
             const recipientUser = game.users.get(recipientId);
-            if (!game.user.isGM && recipientUser && !recipientUser.isGM) {
+            
+            if (game.user.isGM) {
+                // If sender is GM, save for persistence
+                await DataManager.savePrivateChats();
+                
+            } else if (recipientUser && !recipientUser.isGM) {
+                // Player-to-Player Relay Logic
                 const gm = game.users.find(u => u.isGM && u.active);
                 if (gm) {
                     SocketHandler.emit("privateMessage", {
@@ -124,26 +152,28 @@ export class RunarWindow extends HandlebarsApplicationMixin(ApplicationV2) {
                         originalSenderId: senderId, originalRecipientId: recipientId
                     }, { recipients: [gm.id] });
                 }
-            } else if (game.user.isGM) {
-                await DataManager.savePrivateChats();
-            }
-            // FIX: Replaced UIManager call with a direct render for more stability.
-            this.render(true);
+            } 
+            
         } 
-        else if (this.options.groupId) {
-            const groupId = this.options.groupId;
+        
+        // --- Group Chat Logic ---
+        else if (windowInstance.options.groupId) {
+            const groupId = windowInstance.options.groupId;
             const group = DataManager.groupChats.get(groupId);
             if (!group) return;
 
             DataManager.addGroupMessage(groupId, messageData);
-            const recipients = group.members.filter(id => id !== game.user.id);
-            if (recipients.length > 0) {
-                SocketHandler.emit("groupMessage", { groupId, message: messageData }, { recipients });
+            
+            // FIX 3: Emit to ALL group members to ensure everyone, including sender, receives update.
+            if (group.members.length > 0) {
+                SocketHandler.emit("groupMessage", { groupId, message: messageData }, { recipients: group.members }); 
             }
-             // FIX: Replaced UIManager call with a direct render for more stability.
-            this.render(true);
+            
             if (game.user.isGM) await DataManager.saveGroupChats();
         }
+
+        // Final UI Updates
+        windowInstance.render(true);
 
         const messageInput = form.querySelector('textarea[name="message"]');
         if (messageInput) {
