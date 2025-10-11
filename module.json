@@ -26,7 +26,7 @@
   "./src/GMMonitorWindow.js",
   "./src/SettingsWindow.js",
   "./src/PlayerHubWindow.js"
-  ]
+  ],
   "styles": [
     "global-theme.css",
     "ragnaroks-runar.css"
@@ -48,3 +48,4 @@
   "download": "https://github.com/Odinn-1982/ragnaroks-runar/archive/refs/heads/main.zip",
   "url": "https://github.com/Odinn-1982/ragnaroks-runar"
 }
+
