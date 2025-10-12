@@ -2,7 +2,7 @@
   "id": "ragnaroks-runar",
   "title": "RagNarok's Rúnar",
   "description": "A system-agnostic Foundry VTT module for dynamic group and private chats, persistent logs, customizable sound notifications, multi-language support, and modern UX. Includes GM chat monitoring, macros, and customizable styles for immersive gameplay.",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "authors": [
     {
       "name": "Odinn",
@@ -48,3 +48,4 @@
   "download": "https://github.com/Odinn-1982/ragnaroks-runar/archive/refs/heads/main.zip",
   "url": "https://github.com/Odinn-1982/ragnaroks-runar"
 }
+
