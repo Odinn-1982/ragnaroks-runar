@@ -16,7 +16,7 @@
     "verified": "13"
   },
   "esmodules": [
-    "./src/RagnaroksRunarv2.js",
+    "./src/RagnaroksRunar.js",
     "./src/DataManager.js",
     "./src/UIManager.js",
     "./src/SocketHandler.js",
