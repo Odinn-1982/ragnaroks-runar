@@ -16,12 +16,12 @@
     "verified": "13"
   },
   "esmodules": [
-    "./src/RagnaroksRunar.js",
+    "./src/RagnaroksRunarv2.js",
     "./src/DataManager.js",
     "./src/UIManager.js",
     "./src/SocketHandler.js",
     "./src/hooks.js",
-    "./src/RunarWindow.v2.js",
+    "./src/RunarWindow.js",
     "./src/GroupManagerWindow.js",
     "./src/GMMonitorWindow.js",
     "./src/SettingsWindow.js",
