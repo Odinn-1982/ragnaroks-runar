@@ -16,17 +16,17 @@
     "verified": "13"
   },
   "esmodules": [
-  "./src/RagnaroksRunar.js",
-  "./src/DataManager.js",
-  "./src/UIManager.js",
-  "./src/SocketHandler.js",
-  "./src/hooks.js",
-  "./src/RunarWindow.v2.js",
-  "./src/GroupManagerWindow.js",
-  "./src/GMMonitorWindow.js",
-  "./src/SettingsWindow.js",
-  "./src/PlayerHubWindow.js"
-  ]
+    "./src/RagnaroksRunar.js",
+    "./src/DataManager.js",
+    "./src/UIManager.js",
+    "./src/SocketHandler.js",
+    "./src/hooks.js",
+    "./src/RunarWindow.v2.js",
+    "./src/GroupManagerWindow.js",
+    "./src/GMMonitorWindow.js",
+    "./src/SettingsWindow.js",
+    "./src/PlayerHubWindow.js"
+  ],
   "styles": [
     "global-theme.css",
     "ragnaroks-runar.css"
