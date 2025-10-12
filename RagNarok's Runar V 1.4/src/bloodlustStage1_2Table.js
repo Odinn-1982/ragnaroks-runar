@@ -1,0 +1,28 @@
+export const bloodlustStage1_2Table = {
+  name: "Bloodlust Stage 1-2: The Restless State",
+  description: "Roll when a character's Bloodlust becomes 1 or 2. The effect persists as long as they remain in this stage.",
+  results: [
+    { type: "text", weight: 1, range: [1, 1], description: "Shaky Hands: You have Disadvantage on your next ranged attack roll each turn." },
+    { type: "text", weight: 1, range: [2, 2], description: "Apathetic Façade: You have Disadvantage on Wisdom (Insight) checks, but Advantage on saving throws against being charmed." },
+    { type: "text", weight: 1, range: [3, 3], description: "Grim Fixation: You have Advantage on checks to track a creature that is bloodied, but Disadvantage on all other Wisdom (Survival) checks." },
+    { type: "text", weight: 1, range: [4, 4], description: "Unsettling Focus: You have Disadvantage on Charisma (Persuasion) checks, but Advantage on Charisma (Intimidation) checks." },
+    { type: "text", weight: 1, range: [5, 5], description: "The Scent of Blood: The smell of blood is distracting. You have Disadvantage on Wisdom (Perception) checks that rely on smell unless tracking a wounded creature." },
+    { type: "text", weight: 1, range: [6, 6], description: "Nervous Energy: Your walking speed increases by 5 feet, but you cannot take the Hide action." },
+    { type: "text", weight: 1, range: [7, 7], description: "Whispers in the Dark: You are plagued by faint, distracting whispers. You have Disadvantage on checks made to maintain concentration on a spell." },
+    { type: "text", weight: 1, range: [8, 8], description: "Blunt and Brutal: You are unable to lie effectively. You automatically fail Charisma (Deception) checks, but your brutal honesty grants you Advantage on checks to see through the lies of others." },
+    { type: "text", weight: 1, range: [9, 11], description: "Classic Urge: You have Disadvantage on Persuasion and Deception checks, but you deal +2 damage on melee attacks against bloodied creatures." },
+    { type: "text", weight: 1, range: [12, 12], description: "Primal Awareness: You gain a +2 bonus to your passive Perception, but suffer a -2 penalty to your Initiative rolls." },
+    { type: "text", weight: 1, range: [13, 13], description: "Hungry Eyes: You can use a bonus action to learn if a creature you can see is below half its maximum hit points." },
+    { type: "text", weight: 1, range: [14, 14], description: "Restless Mind: You can no longer benefit from the effects of a Short Rest." },
+    { type: "text", weight: 1, range: [15, 15], description: "Sudden Temper: The first time you are damaged in combat, you gain temporary hit points equal to your proficiency bonus." },
+    { type: "text", weight: 1, range: [16, 16], description: "Light Sensitivity: You have Disadvantage on attack rolls and on Wisdom (Perception) checks that rely on sight when you, the target of your attack, or whatever you are trying to perceive is in direct sunlight." },
+    { type: "text", weight: 1, range: [17, 17], description: "Blood Scent: You can pinpoint the location of any living creature with blood within 10 feet of you, even if blinded or in darkness." },
+    { type: "text", weight: 1, range: [18, 18], description: "Cold to the Touch: You gain resistance to cold damage but become vulnerable to fire damage." },
+    { type: "text", weight: 1, range: [19, 19], description: "The Thirst Distracts: You must drink twice as much water per day. If you fail to do so, you gain one level of exhaustion." },
+    { type: "text", weight: 1, range: [20, 20], description: "A Taste of Power: Once per combat, you can choose to take a -5 penalty to an attack roll. If the attack hits, you add +10 to the damage." }
+  ],
+  formula: "1d20",
+  img: "icons/svg/d20-grey.svg",
+  replacement: true,
+  displayRoll: true,
+};
